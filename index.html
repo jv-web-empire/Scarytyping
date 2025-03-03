@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scary Typing Master</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            text-align: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 1rem auto;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid #ff4444;
+            border-radius: 8px;
+        }
+
+        h1 {
+            color: #ff4444;
+        }
+
+        #story-display {
+            font-size: 1.1rem;
+            padding: 1rem;
+            background: #111;
+            border-radius: 5px;
+            min-height: 150px;
+        }
+
+        #story-input {
+            width: 100%;
+            padding: 1rem;
+            background: #222;
+            color: #fff;
+            border: 2px solid #ff4444;
+            border-radius: 5px;
+            margin-top: 1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        #progress {
+            height: 100%;
+            width: 0%;
+            background: #ff4444;
+            transition: width 0.3s;
+        }
+
+        #results {
+            margin: 1rem 0;
+        }
+
+        button {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+
+        button:hover {
+            background: #cc0000;
+        }
+
+        .correct {
+            color: #4CAF50;
+        }
+
+        .incorrect {
+            color: #f44336;
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ... (keep body HTML the same) ... -->
+
+    <div class="container">
+        <h1><i class="fas fa-ghost"></i> Scary Typing Master</h1>
+        <p>Type the scary story below as fast as you can!</p>
+        <div id="story-display"></div>
+        <textarea id="story-input" placeholder="Start typing..."></textarea>
+        <div class="progress-bar">
+            <div id="progress"></div>
+        </div>
+        <div id="results">
+            <p><i class="fas fa-clock"></i> Time: <span id="time">0</span>s</p>
+            <p><i class="fas fa-star"></i> Score: <span id="score">0</span></p>
+            <p><i class="fas fa-bullseye"></i> Accuracy: <span id="accuracy">100</span>%</p>
+            <p><i class="fas fa-keyboard"></i> WPM: <span id="wpm">0</span></p>
+            <p id="winner-message"></p>
+        </div>
+        <button id="next-story">Next Story</button>
+    </div>
+
+
+    <script>
+        // Declare variables at the top
+        let currentStory = "",
+            time = 0,
+            timer,
+            isPlaying = false;
+
+        // DOM elements reference
+        const elements = {
+            storyDisplay: document.getElementById("story-display"),
+            storyInput: document.getElementById("story-input"),
+            time: document.getElementById("time"),
+            score: document.getElementById("score"),
+            accuracy: document.getElementById("accuracy"),
+            progress: document.getElementById("progress"),
+            wpm: document.getElementById("wpm"),
+            winnerMessage: document.getElementById("winner-message"),
+            nextStory: document.getElementById("next-story")
+        };
+
+        // Stories array (fixed formatting)
+        const stories = [
+
+            "The TV static crackled, and a distorted voice whispered my name. I turned it off, but the whispers continued from behind me...",
+            "I flipped through my childhood photo album and found a picture of my birthday. There was a stranger in the background, smiling at me...",
+            "A knock on the window woke me up. I live on the tenth floor...",
+            "I waved at my neighbor across the street. He waved back, but then I remembered—he died last year...",
+            "The attic door creaked open by itself. Dust swirled in the moonlight as I heard soft footsteps above...",
+            "The rocking chair in the corner started moving on its own. A faint whisper drifted through the room...",
+            "My reflection in the mirror blinked—but I hadn't...",
+            "I tucked my child into bed, then heard a voice behind me say, ‘There's someone in my bed...'",
+            "I answered the ringing phone, but there was only heavy breathing. Then I heard my own voice whisper, ‘Don’t turn around...'",
+            "I found an old tape recorder at a garage sale. When I played it, a voice whispered, ‘I'm still in the house...'",
+            "The old mansion's doors creaked open by themselves. Moonlight revealed dusty furniture covered in sheets...",
+            "A cold hand gripped my shoulder as I heard whispers in the dark attic. The flashlight flickered...",
+            "Footsteps echoed in the empty hallway. The temperature dropped suddenly as I saw my breath fog...",
+            "I woke up to find muddy footprints leading from my window to my bed. It had rained last night...",
+            "The baby monitor crackled. A deep voice whispered, ‘Don't worry, I’ll watch them sleep...'",
+            "I looked at my phone and saw a text from my best friend: ‘Come outside.’ She had died last week...",
+            "I found a hidden door behind an old bookshelf. Inside was a child’s bedroom frozen in time, with a diary that ended with: ‘I’m still waiting...'",
+            "I heard my mom calling from the kitchen. As I walked out, she grabbed my arm from the bedroom and whispered, ‘Don’t go...'",
+            "My dog growled at the corner of my room. I turned on the light—nothing was there, but his fur stood on end...",
+            "I woke up thirsty and went to the kitchen. From my bedroom, I heard my own voice say, ‘Where are you going?'",
+            "I was alone in my apartment when my Alexa whispered, ‘I see you...'",
+            "I stared at the CCTV footage of my front door. It showed someone standing there, staring at the camera—except my doorbell never rang...",
+            "I saw an old man sitting on my porch. When I asked my family about him, they said, ‘What man?'",
+            "The hotel room clock stopped at 3:33 AM. The TV turned on by itself, showing static...",
+            "A child's laughter echoed in my empty house. I don't have any kids...",
+            "The old doll I bought from the antique shop had a note in its pocket: ‘I'm still here...'",
+            "I woke up with bruises on my arms. My bedroom door was locked from the inside...",
+            "I took a selfie in the dark. When I brightened the image, there was a shadowy figure behind me...",
+            "I walked past an abandoned house and saw a figure waving at me from the window. The house had been empty for decades...",
+            "My phone rang, showing my mom’s number. But she was sitting right next to me...",
+            "The whispers from the air vent grew louder at night. I pressed my ear close and heard, ‘Let me out...'",
+            "The rocking chair creaked slowly. I was home alone...",
+            "I locked the basement door before bed. At midnight, I heard it creak open...",
+            "I was driving alone when I glanced in the rearview mirror. Someone was sitting in my backseat...",
+            "The swing in my backyard moved on its own. A small handprint appeared on the seat...",
+            "I found an old voicemail from my grandma wishing me a happy birthday. She had been dead for two years...",
+            "I heard knocking on my bedroom door. I live alone...",
+            "I turned on the baby monitor and saw a shadowy figure standing over my child's crib...",
+            "I saw a man standing in my closet. I blinked, and he was gone, but the door was still open...",
+            "The mirror showed my room perfectly, except for the shadow standing behind me...",
+            "The hallway light flickered, and I saw a figure at the end. When I looked again, it was gone...",
+            "My music player randomly turned on. A distorted voice sang along to the lyrics...",
+            "I watched my security camera footage. A figure stood in my living room at 3 AM, staring at the camera...",
+            "A stranger on the subway whispered, ‘See you soon.’ I got home and found a note on my bed that said the same thing...",
+            "I closed my closet door before bed. In the morning, it was wide open...",
+            "I took a family photo and saw an extra hand resting on my shoulder. No one was standing there...",
+            "I heard a voice calling my name from downstairs. My whole family was asleep in their rooms...",
+            "My grandmother rocked in her chair every night. She passed away last week, but the chair still moves at midnight...",
+
+        ];
+
+        function init() {
+            // Reset game state
+            currentStory = stories[Math.floor(Math.random() * stories.length)];
+            elements.storyDisplay.innerHTML = currentStory.split("").map(char =>
+                `<span>${char}</span>`
+            ).join("");
+
+            // Clear input and reset values
+            elements.storyInput.value = "";
+            elements.storyInput.focus();
+            time = 0;
+            isPlaying = true;
+
+            // Reset UI elements
+            elements.time.textContent = "0";
+            elements.score.textContent = "0";
+            elements.accuracy.textContent = "100";
+            elements.wpm.textContent = "0";
+            elements.progress.style.width = "0%";
+            elements.winnerMessage.textContent = "";
+
+            // Clear existing timer and start new one
+            clearInterval(timer);
+            timer = setInterval(updateTimer, 1000);
+        }
+
+        function updateTimer() {
+            time++;
+            elements.time.textContent = time;
+        }
+
+        // Input handling
+        elements.storyInput.addEventListener("input", handleInput);
+        elements.nextStory.addEventListener("click", init);
+
+        function handleInput() {
+            const typed = this.value;
+            const chars = elements.storyDisplay.querySelectorAll("span");
+            let correct = 0;
+
+            // Update character highlighting
+            chars.forEach((char, i) => {
+                char.classList.remove("correct", "incorrect");
+                if (i >= typed.length) return;
+
+                if (typed[i] === char.textContent) {
+                    char.classList.add("correct");
+                    correct++;
+                } else {
+                    char.classList.add("incorrect");
+                }
+            });
+
+            // Calculate metrics
+            const totalTyped = typed.length;
+            const accuracy = totalTyped === 0 ? 100 : (correct / totalTyped) * 100;
+
+            // Update UI
+            elements.score.textContent = correct;
+            elements.accuracy.textContent = accuracy.toFixed(2);
+            elements.progress.style.width = `${(correct / chars.length) * 100}%`;
+
+            // Check completion
+            if (typed === currentStory) {
+                clearInterval(timer);
+                const wpm = Math.round((typed.length / 5) / (Math.max(time, 1) / 60));
+                elements.wpm.textContent = wpm;
+                elements.winnerMessage.textContent =
+                    `🎉 Congratulations! You completed the story with ${wpm} WPM! 🎉`;
+                isPlaying = false;
+            }
+        }
+
+        // Initialize first story
+        init();
+    </script>
+</body>
+
+</html>
